@@ -1,17 +1,20 @@
 import fileinput
 from collections import defaultdict
-from itertools import permutations
+from itertools import pairwise, permutations
 from operator import itemgetter
 
 
 def parse():
+    distances = defaultdict(int)
     graph = defaultdict(list)
     for line in fileinput.input():
         cities, dist = line.strip().split(" = ")
         v, u = cities.split(" to ")
         graph[v].append((u, int(dist)))
         graph[u].append((v, int(dist)))
-    return graph
+        distances[(v, u)] = int(dist)
+        distances[(u, v)] = int(dist)
+    return graph, distances
 
 
 def search(graph):
@@ -41,9 +44,21 @@ def paths(graph, source, target):
     return paths
 
 
+def search_permutations(cities, distances):
+    paths = []
+    for path in permutations(cities):
+        path_len = sum(distances[(v, u)] for v, u in pairwise(path))
+        paths.append((list(path), path_len))
+    return paths
+
+
 def main():
-    graph = parse()
+    graph, distances = parse()
     paths = search(graph)
+    print(f"Part 1: {min(paths, key=itemgetter(1))}")
+    print(f"Part 2: {max(paths, key=itemgetter(1))}")
+
+    paths = search_permutations(graph.keys(), distances)
     print(f"Part 1: {min(paths, key=itemgetter(1))}")
     print(f"Part 2: {max(paths, key=itemgetter(1))}")
 
